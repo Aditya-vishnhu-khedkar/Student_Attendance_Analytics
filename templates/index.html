@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Attendance Analytics</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: #212529;
+        }
+
+        .sidebar h4 {
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 12px 20px;
+        }
+
+        .sidebar a:hover {
+            background-color: #343a40;
+            color: white;
+        }
+
+        .dashboard-card {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .dashboard-card h2 {
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 25px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container-fluid">
+
+    <div class="row">
+
+
+        <!-- SIDEBAR -->
+
+        <div class="col-md-2 sidebar p-0">
+
+            <h4>
+                <i class="bi bi-bar-chart-fill"></i>
+                Attendance
+            </h4>
+
+
+            <a href="/">
+                <i class="bi bi-speedometer2"></i>
+                Dashboard
+            </a>
+
+
+            <a href="#students">
+                <i class="bi bi-people-fill"></i>
+                Students
+            </a>
+
+
+            <a href="#chart">
+                <i class="bi bi-graph-up"></i>
+                Analytics
+            </a>
+
+
+            <a href="/logout">
+                <i class="bi bi-box-arrow-right"></i>
+                Logout
+            </a>
+
+        </div>
+
+
+
+        <!-- MAIN CONTENT -->
+
+        <div class="col-md-10 main-content">
+
+
+            <!-- TOP BAR -->
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h2>
+                        Dashboard
+                    </h2>
+
+                    <p class="text-muted">
+                        Student Attendance Analytics
+                    </p>
+
+                </div>
+
+
+                <a href="/logout"
+                   class="btn btn-outline-danger">
+
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+
+                </a>
+
+            </div>
+
+
+
+            <!-- STATISTICS -->
+
+            <div class="row">
+
+
+                <!-- Total Students -->
+
+                <div class="col-md-4 mb-3">
+
+                    <div class="card dashboard-card shadow-sm">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <h6 class="text-muted">
+                                        Total Students
+                                    </h6>
+
+                                    <h2>
+                                        {{ total_students }}
+                                    </h2>
+
+                                </div>
+
+                                <i class="bi bi-people-fill fs-1 text-primary"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Present Students -->
+
+                <div class="col-md-4 mb-3">
+
+                    <div class="card dashboard-card shadow-sm">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <h6 class="text-muted">
+                                        Good Attendance
+                                    </h6>
+
+                                    <h2>
+                                        {{ present_students }}
+                                    </h2>
+
+                                    <small class="text-muted">
+                                        Attendance ≥ 75%
+                                    </small>
+
+                                </div>
+
+                                <i class="bi bi-check-circle-fill fs-1 text-success"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Average -->
+
+                <div class="col-md-4 mb-3">
+
+                    <div class="card dashboard-card shadow-sm">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <h6 class="text-muted">
+                                        Average Attendance
+                                    </h6>
+
+                                    <h2>
+                                        {{ "%.2f"|format(average_attendance) }}%
+                                    </h2>
+
+                                </div>
+
+                                <i class="bi bi-graph-up-arrow fs-1 text-warning"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- SEARCH -->
+
+            <div class="card shadow-sm mt-4">
+
+                <div class="card-body">
+
+                    <h5>
+                        <i class="bi bi-search"></i>
+                        Search & Filter
+                    </h5>
+
+
+                    <form action="/" method="GET">
+
+                        <div class="row mt-3">
+
+
+                            <div class="col-md-6 mb-2">
+
+                                <input type="text"
+                                       name="search"
+                                       class="form-control"
+                                       placeholder="Search student name..."
+                                       value="{{ search }}">
+
+                            </div>
+
+
+                            <div class="col-md-4 mb-2">
+
+                                <select name="filter"
+                                        class="form-select">
+
+                                    <option value="all"
+                                        {% if filter_type == "all" %}selected{% endif %}>
+                                        All Students
+                                    </option>
+
+                                    <option value="above"
+                                        {% if filter_type == "above" %}selected{% endif %}>
+                                        Attendance 75% or Above
+                                    </option>
+
+                                    <option value="below"
+                                        {% if filter_type == "below" %}selected{% endif %}>
+                                        Attendance Below 75%
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-md-2 mb-2">
+
+                                <button type="submit"
+                                        class="btn btn-primary w-100">
+
+                                    Search
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ADD STUDENT -->
+
+            <div class="card shadow-sm mt-4">
+
+                <div class="card-body">
+
+                    <h5>
+                        <i class="bi bi-person-plus-fill"></i>
+                        Add Student
+                    </h5>
+
+
+                    <form action="/add" method="POST">
+
+                        <div class="row mt-3">
+
+
+                            <div class="col-md-4">
+
+                                <input type="text"
+                                       name="name"
+                                       class="form-control"
+                                       placeholder="Student Name"
+                                       required>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <input type="number"
+                                       name="present"
+                                       class="form-control"
+                                       placeholder="Present Days"
+                                       min="0"
+                                       required>
+
+                            </div>
+
+
+                            <div class="col-md-3">
+
+                                <input type="number"
+                                       name="total"
+                                       class="form-control"
+                                       placeholder="Total Days"
+                                       min="1"
+                                       required>
+
+                            </div>
+
+
+                            <div class="col-md-2">
+
+                                <button type="submit"
+                                        class="btn btn-success w-100">
+
+                                    <i class="bi bi-plus-circle"></i>
+                                    Add
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- STUDENT TABLE -->
+
+            <div class="card shadow-sm mt-4"
+                 id="students">
+
+                <div class="card-body">
+
+                    <h5>
+                        <i class="bi bi-table"></i>
+                        Student Attendance
+                    </h5>
+
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover align-middle mt-3">
+
+                            <thead class="table-dark">
+
+                                <tr>
+
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Present</th>
+                                    <th>Total</th>
+                                    <th>Attendance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+
+                                {% for student in students %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ student.id }}
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            {{ student.name }}
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        {{ student.present }}
+                                    </td>
+
+                                    <td>
+                                        {{ student.total }}
+                                    </td>
+
+                                    <td>
+
+                                        {{ "%.2f"|format(
+                                            (student.present / student.total) * 100
+                                        ) }}%
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if (student.present / student.total) * 100 >= 75 %}
+
+                                        <span class="badge bg-success">
+                                            Good
+                                        </span>
+
+                                        {% else %}
+
+                                        <span class="badge bg-danger">
+                                            Low
+                                        </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <a href="/edit/{{ student.id }}"
+                                           class="btn btn-warning btn-sm">
+
+                                            <i class="bi bi-pencil"></i>
+                                            Edit
+
+                                        </a>
+
+
+                                        <a href="/delete/{{ student.id }}"
+                                           class="btn btn-danger btn-sm"
+                                           onclick="return confirm('Are you sure you want to delete this student?');">
+
+                                            <i class="bi bi-trash"></i>
+                                            Delete
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+
+                                {% else %}
+
+                                <tr>
+
+                                    <td colspan="7"
+                                        class="text-center">
+
+                                        No students found.
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- CHART -->
+
+            <div class="card shadow-sm mt-4 mb-5"
+                 id="chart">
+
+                <div class="card-body">
+
+                    <h5>
+                        <i class="bi bi-bar-chart-fill"></i>
+                        Attendance Analytics
+                    </h5>
+
+                    <canvas id="attendanceChart"></canvas>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Chart.js -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+
+const studentNames = [
+
+    {% for student in students %}
+
+    "{{ student.name }}"
+
+    {% if not loop.last %},{% endif %}
+
+    {% endfor %}
+
+];
+
+
+const attendanceData = [
+
+    {% for student in students %}
+
+    {{ (student.present / student.total) * 100 }}
+
+    {% if not loop.last %},{% endif %}
+
+    {% endfor %}
+
+];
+
+
+const ctx = document.getElementById("attendanceChart");
+
+
+new Chart(ctx, {
+
+    type: "bar",
+
+    data: {
+
+        labels: studentNames,
+
+        datasets: [{
+
+            label: "Attendance Percentage",
+
+            data: attendanceData
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true,
+
+        scales: {
+
+            y: {
+
+                beginAtZero: true,
+
+                max: 100,
+
+                title: {
+
+                    display: true,
+
+                    text: "Attendance %"
+
+                }
+
+            }
+
+        }
+
+    }
+
+});
+
+</script>
+
+
+</body>
+
+</html>
