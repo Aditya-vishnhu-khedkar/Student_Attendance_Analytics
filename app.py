@@ -7,10 +7,35 @@ app = Flask(__name__)
 app.secret_key = "student_attendance_secret_key"
 
 
+# =========================
+# DATABASE CONNECTION
+# =========================
+
 def get_db_connection():
     conn = sqlite3.connect("attendance.db")
     conn.row_factory = sqlite3.Row
     return conn
+
+
+# =========================
+# INITIALIZE DATABASE
+# =========================
+
+def init_db():
+
+    conn = get_db_connection()
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            present INTEGER NOT NULL,
+            total INTEGER NOT NULL
+        )
+    """)
+
+    conn.commit()
+    conn.close()
 
 
 # =========================
@@ -82,32 +107,39 @@ def home():
 
         students = [
             student for student in students
-            if (student["present"] / student["total"]) * 100 >= 75
+            if student["total"] > 0
+            and (student["present"] / student["total"]) * 100 >= 75
         ]
 
     elif filter_type == "below":
 
         students = [
             student for student in students
-            if (student["present"] / student["total"]) * 100 < 75
+            if student["total"] > 0
+            and (student["present"] / student["total"]) * 100 < 75
         ]
 
     total_students = len(students)
 
+    # Average attendance
     if total_students > 0:
 
         average_attendance = sum(
             (student["present"] / student["total"]) * 100
             for student in students
+            if student["total"] > 0
         ) / total_students
 
     else:
 
         average_attendance = 0
 
+    # Students with attendance >= 75%
     present_students = sum(
-        1 for student in students
-        if (student["present"] / student["total"]) * 100 >= 75
+        1
+        for student in students
+        if student["total"] > 0
+        and (student["present"] / student["total"]) * 100 >= 75
     )
 
     return render_template(
@@ -137,6 +169,9 @@ def add_student():
 
     if present > total:
         return "Present days cannot be greater than total days."
+
+    if total <= 0:
+        return "Total days must be greater than 0."
 
     conn = get_db_connection()
 
@@ -175,6 +210,10 @@ def edit_student(id):
         if present > total:
             conn.close()
             return "Present days cannot be greater than total days."
+
+        if total <= 0:
+            conn.close()
+            return "Total days must be greater than 0."
 
         conn.execute(
             """
@@ -224,6 +263,13 @@ def delete_student(id):
     conn.close()
 
     return redirect("/")
+
+
+# =========================
+# INITIALIZE DATABASE
+# =========================
+
+init_db()
 
 
 # =========================
